@@ -1,24 +1,26 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import Table from "./components/Table";
+import { DraftContext, DraftProvider } from "./DraftContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Nav from './components/Nav';
+import HomePage from './components/HomePage';
 
 function App() {
+  // let { draft, setDraft } = DraftContext;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <DraftProvider>
+        <Router>
+          <Nav />
+          <Routes>
+            <Route path="/" element={ <HomePage />} />
+            <Route path='draft/:year' element={<Table />} />
+          </Routes>
+        </Router>
+        <Table />
+      </DraftProvider>
+    </>
   );
 }
 
