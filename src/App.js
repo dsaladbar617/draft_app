@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Table from "./components/Table";
+import Table from "./_components/Table";
 import { DraftContext, DraftProvider } from "./DraftContext";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Nav from './components/Nav';
-import HomePage from './components/HomePage';
+import Nav from './_components/Nav';
+import HomePage from './_components/HomePage';
 
 function App() {
   // let { draft, setDraft } = DraftContext;

@@ -3,14 +3,17 @@ import React, { useState } from "react";
 const DraftContext = React.createContext('')
 
 const DraftProvider = ({ children }) => {
-  const [draft, setDraft] = useState()
+  const [draft, setDraft] = useState([]);
+  const [draftYear, setDraftYear] = useState(2022);
 
   const values = {
-    draft
+    draft,
+    draftYear
   }
 
   const setters = {
-    setDraft
+    setDraft,
+    setDraftYear
   }
 
   return (
