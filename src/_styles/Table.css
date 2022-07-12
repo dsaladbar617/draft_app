@@ -1,0 +1,28 @@
+table {
+  border-style: solid;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+}
+
+td, th {
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #ADB5BD;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: white;
+  color: black;
+}
+
+thead tr {
+  background-color: #6C757D;
+  color: white;
+}
