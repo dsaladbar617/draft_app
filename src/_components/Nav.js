@@ -13,6 +13,7 @@ const Nav = () => {
 
   let teams = [
     { name: 'None', team_id: 0},
+    { name: 'Anaheim Ducks', team_id: 24},
     { name: 'Arizona Coyotes', team_id: 53},
     { name: 'Boston Bruins', team_id: 6},
     { name: 'Buffalo Sabres', team_id: 7},
