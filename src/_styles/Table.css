@@ -13,11 +13,11 @@ td, th {
   padding: 1rem;
 }
 
-tbody tr:nth-child(even) {
+.data:nth-child(even) {
   background-color: #ADB5BD;
 }
 
-tbody tr:nth-child(odd) {
+.data:nth-child(odd) {
   background-color: white;
   color: black;
 }
@@ -25,4 +25,9 @@ tbody tr:nth-child(odd) {
 thead tr {
   background-color: #6C757D;
   color: white;
+}
+
+.space tr{
+  background-color: black;
+  color: black;
 }
