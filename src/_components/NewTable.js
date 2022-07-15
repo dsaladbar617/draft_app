@@ -1,23 +1,100 @@
-import * as React from 'react';
-import { useContext } from 'react';
-import { DraftContext } from '../DraftContext';
-import PropTypes from 'prop-types';
-import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import React, { useEffect } from "react";
+import { useContext } from "react";
+import { DraftContext } from "../DraftContext";
+import PropTypes from "prop-types";
+import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { styled } from '@mui/material/styles';
 
 const NewTable = () => {
   let { values, setters } = useContext(DraftContext);
+  let currentPicks = [];
+  let currentStats = [];
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.common.black,
+      color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14,
+    },
+  }));
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    '&:nth-of-type(odd)': {
+      backgroundColor: theme.palette.action.hover,
+    },
+    // hide last border
+    '&:last-child td, &:last-child th': {
+      border: 0,
+    },
+  }));
+
+  useEffect(() => {
+    currentPicks = [];
+    fetch(`https://statsapi.web.nhl.com/api/v1/draft/${values.draftYear}`)
+      .then((res) => res.json())
+      .then((data) => {
+        data.drafts[0].rounds.forEach((draft) => {
+          draft.picks.forEach((round) => {
+            if(values.teamName !== '') {
+              if (values.teamName === round.team.name) {
+                currentPicks.push(round)
+              }
+            } else {
+              currentPicks.push(round);
+            }
+          });
+        });
+        setters.setPicks(currentPicks);
+      })
+
+
+  }, [values.draftYear, values.teamName]);
+
+  useEffect(() => {
+    currentStats = [];
+    Promise.all(values.picks.map(pick => {
+      if (pick.prospect.id !== undefined) {
+        return fetch(`https://statsapi.web.nhl.com//api/v1/draft/prospects/${pick.prospect.id}`)
+          .then(res => res.json())
+          .then((data )=> (data.prospects[0].nhlPlayerId))
+          .then(data => {
+            console.log(data)
+          //   let playerId = data
+          //   if (playerId !== undefined) {
+          //     return fetch(`https://statsapi.web.nhl.com//api/v1/people/${playerId}/stats?stats=careerRegularSeason`)
+          //       .then(res => res.json())
+          //       .then(data => {
+          //         // console.log(data.stats[0])
+          //         if (data.stats[0].splits[0]) {
+          //           currentStats.push(data.stats[0].splits[0].stat)
+          //         } else {
+          //           currentStats.push('No NHL Stats')
+          //         }
+          //       })
+          //   } else {
+          //     currentStats.push('No NHL Stats')
+          //   }
+          // })
+          })
+      } else {
+        // currentStats.push('No NHL Stats')
+      }
+    })).then(() => console.log(values.draftYear, currentStats))
+
+  }, [values.picks])
 
   const createData = (round, overAll, teamName, prospectName) => {
     return {
@@ -25,11 +102,11 @@ const NewTable = () => {
       overAll,
       teamName,
       prospectName,
-      stats: {
+      // stats: {
 
-      }
-    }
-  }
+      // }
+    };
+  };
 
   const Row = (props) => {
     const { row } = props;
@@ -37,16 +114,17 @@ const NewTable = () => {
 
     return (
       <>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+        <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
           <TableCell>
             <IconButton
               aria-label="expand row"
               size="small"
-              onClick={() => setOpen(!open)}>
+              onClick={() => setOpen(!open)}
+            >
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
-          <TableCell component="th" scope="row">
+          <TableCell component="th" scope="row" align="right">
             {row.round}
           </TableCell>
           <TableCell align="right">{row.overAll}</TableCell>
@@ -67,50 +145,48 @@ const NewTable = () => {
         </TableRow>
       </>
     );
-  }
-
+  };
 
   Row.propTypes = {
     row: PropTypes.shape({
-      round: PropTypes.number.isRequired,
+      round: PropTypes.string.isRequired,
       overAll: PropTypes.number.isRequired,
       teamName: PropTypes.string.isRequired,
       prospectName: PropTypes.string.isRequired,
-      stats: PropTypes.object
-    })
-  }
+      stats: PropTypes.object,
+    }),
+  };
 
-  const rows = values.draft.map((draft) => {
-    draft.picks.map((pick) => {
-      createData(pick.round, pick.pickOverall, pick.team.name, pick.prospect.fullName)
-    })
-  })
+
+  const rows = values.picks.map((pick) => {
+    return createData(
+      pick.round,
+      pick.pickOverall,
+      pick.team.name,
+      pick.prospect.fullName
+    );
+  });
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer sx={{ width: 2/3, margin: 'auto' }} component={Paper}>
       <Table aria-label="collapsible table">
         <TableHead>
-          <TableRow>
-            <TableCell />
-            <TableCell align="right">Round</TableCell>
-            <TableCell align="right">Overall</TableCell>
-            <TableCell align="right">Team Name</TableCell>
-            <TableCell align="right">Prospect</TableCell>
-          </TableRow>
+          <StyledTableRow>
+            <StyledTableCell />
+            <StyledTableCell align="right">Round</StyledTableCell>
+            <StyledTableCell align="right">Overall</StyledTableCell>
+            <StyledTableCell align="right">Team Name</StyledTableCell>
+            <StyledTableCell align="right">Prospect</StyledTableCell>
+          </StyledTableRow>
         </TableHead>
         <TableBody>
-          {/* {rows.map((row) => (
-            // <Row key={row.name} row={row} />
-          ))} */}
-          {rows.forEach((row) => {
-            console.log(row)
-          }
-            // <Row key={row.name} row={row} />
-          )}
+          {rows.map((row) => (
+            <Row className='that' key={row.name} row={row} />
+          ))}
         </TableBody>
       </Table>
     </TableContainer>
   );
-}
+};
 
 export default NewTable;

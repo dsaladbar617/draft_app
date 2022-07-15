@@ -109,7 +109,7 @@ const Nav = () => {
         <Select
           styles={customStyles}
           placeholder='Select Team...'
-          onChange={(e) => {setters.setTeamId(e.value)}}
+          onChange={(e) => {setters.setTeamName(e.label)}}
           options={teamOptions}
         />
 

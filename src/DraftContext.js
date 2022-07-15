@@ -5,30 +5,33 @@ const DraftContext = React.createContext('')
 const DraftProvider = ({ children }) => {
   const [draft, setDraft] = useState([]);
   const [draftYear, setDraftYear] = useState(2022);
-  const [teamId, setTeamId] = useState(0);
+  const [teamName, setTeamName] = useState('');
   const [filteredDraft, setFilteredDraft] = useState([]);
   const [currentProspectId, setCurrentProspectId] = useState(0);
   const [playerStats, setPlayerStats] = useState({});
   const [currentPlayer, setCurrentPlayer] = useState('');
+  const [picks, setPicks] = useState([]);
 
   const values = {
     draft,
     draftYear,
-    teamId,
+    teamName,
     filteredDraft,
     currentProspectId,
     playerStats,
-    currentPlayer
+    currentPlayer,
+    picks
   }
 
   const setters = {
     setDraft,
     setDraftYear,
-    setTeamId,
+    setTeamName,
     setFilteredDraft,
     setCurrentProspectId,
     setPlayerStats,
-    setCurrentPlayer
+    setCurrentPlayer,
+    setPicks
   }
 
   return (
