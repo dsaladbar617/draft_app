@@ -72,11 +72,12 @@ const NewTable = () => {
 						.then((res) => res.json())
 						.then((data) => data.prospects[0].nhlPlayerId)
 						.then((data) => {
-<<<<<<< HEAD
 							console.log(data);
-=======
+
+							console.log(data);
+
 							// console.log(data);
->>>>>>> abd8575da1a1a05eaee4d3ad2c603b7dd9049ffe
+
 							let playerId = data;
 							if (playerId !== undefined) {
 								return fetch(
@@ -84,11 +85,10 @@ const NewTable = () => {
 								)
 									.then((res) => res.json())
 									.then((data) => {
-<<<<<<< HEAD
 										// console.log(data.stats[0])
-=======
+
 										console.log(data.stats[0]);
->>>>>>> abd8575da1a1a05eaee4d3ad2c603b7dd9049ffe
+
 										if (data.stats[0].splits[0]) {
 											currentStats.push(data.stats[0].splits[0].stat);
 										} else {
@@ -98,22 +98,15 @@ const NewTable = () => {
 							} else {
 								currentStats.push("No NHL Stats");
 							}
-<<<<<<< HEAD
 						});
 					// })
-=======
-							// })
-						});
->>>>>>> abd8575da1a1a05eaee4d3ad2c603b7dd9049ffe
+
+					// })
 				} else {
 					// currentStats.push('No NHL Stats')
 				}
 			})
-<<<<<<< HEAD
 		).then(() => console.log(values.draftYear, currentStats));
-=======
-		).then();
->>>>>>> abd8575da1a1a05eaee4d3ad2c603b7dd9049ffe
 	}, [values.picks]);
 
 	const createData = (round, overAll, teamName, prospectName) => {
