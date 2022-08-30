@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useContext } from "react";
 import { DraftContext } from "../DraftContext";
 import PropTypes from "prop-types";
@@ -19,8 +19,9 @@ import { styled } from "@mui/material/styles";
 
 const NewTable = () => {
 	let { values, setters } = useContext(DraftContext);
-	let currentPicks = [];
-	let currentStats = [];
+	// let currentStats = [];
+	let currentProspectId = useRef(0);
+	let [currentYearPicks, setCurrentYearPicks] = useState([]);
 	const StyledTableCell = styled(TableCell)(({ theme }) => ({
 		[`&.${tableCellClasses.head}`]: {
 			backgroundColor: theme.palette.common.black,
@@ -42,79 +43,108 @@ const NewTable = () => {
 	}));
 
 	useEffect(() => {
-		currentPicks = [];
+		setCurrentYearPicks([]);
 		fetch(`https://statsapi.web.nhl.com/api/v1/draft/${values.draftYear}`)
 			.then((res) => res.json())
 			.then((data) => {
-				data.drafts[0].rounds.forEach((draft) => {
-					draft.picks.forEach((round) => {
-						if (values.teamName !== "") {
-							if (values.teamName === round.team.name) {
-								currentPicks.push(round);
-							}
-						} else {
-							currentPicks.push(round);
-						}
-					});
-				});
-				setters.setPicks(currentPicks);
+				let drafted = data.drafts[0].rounds.map((round) => round.picks).flat(2);
+
+				setCurrentYearPicks(drafted.slice());
+
+				if (values.teamName) {
+					setters.setPicks(
+						drafted.filter((draft) => draft.team.name === values.teamName)
+					);
+				} else {
+					setters.setPicks(drafted);
+				}
+
+				// return !values.teamName
+				// 	? setters.setPicks(drafted)
+				// 	: setters.setPicks(
+				// 			drafted.filter((draft) => draft.team.name === values.teamName)
+				// 	  );
+				// data.drafts[0].rounds.forEach((draft) => {
+				// 	draft.picks.forEach((round) => {
+				// 		if (values.teamName !== "") {
+				// 			if (values.teamName === round.team.name) {
+				// 				currentPicks.push(round);
+				// 			}
+				// 		} else {
+				// 			currentPicks.push(round);
+				// 		}
+				// 	});
+				// });
+				// setters.setPicks(currentPicks);
 			});
-	}, [values.draftYear, values.teamName]);
+	}, [values.draftYear]);
 
 	useEffect(() => {
-		currentStats = [];
-		Promise.all(
-			values.picks.map((pick) => {
-				if (pick.prospect.id !== undefined) {
-					return fetch(
-						`https://statsapi.web.nhl.com//api/v1/draft/prospects/${pick.prospect.id}`
-					)
-						.then((res) => res.json())
-						.then((data) => data.prospects[0].nhlPlayerId)
-						.then((data) => {
-							console.log(data);
+		if (values.teamName) {
+			setters.setPicks(
+				values.picks.filter((draft) => draft.team.name === values.teamName)
+			);
+		} else {
+			setters.setPicks(currentYearPicks);
+		}
+	}, [values.teamName]);
 
-							console.log(data);
+	useEffect(() => {
+		// currentStats = [];
+		console.log(currentProspectId.current, "yuh");
+		// Promise.all(
+		// 	values.picks.map((pick) => {
+		// 		if (pick.prospect.id !== undefined) {
+		// 			return fetch(
+		// 				`https://statsapi.web.nhl.com//api/v1/draft/prospects/${pick.prospect.id}`
+		// 			)
+		// 				.then((res) => res.json())
+		// 				.then((data) => data.prospects[0].nhlPlayerId)
+		// 				.then((data) => {
+		// 					console.log(data);
 
-							// console.log(data);
+		// 					console.log(data);
 
-							let playerId = data;
-							if (playerId !== undefined) {
-								return fetch(
-									`https://statsapi.web.nhl.com//api/v1/people/${playerId}/stats?stats=careerRegularSeason`
-								)
-									.then((res) => res.json())
-									.then((data) => {
-										// console.log(data.stats[0])
+		// 					// console.log(data);
 
-										console.log(data.stats[0]);
+		// 					let playerId = data;
+		// 					if (playerId !== undefined) {
+		// 						return fetch(
+		// 							`https://statsapi.web.nhl.com//api/v1/people/${playerId}/stats?stats=careerRegularSeason`
+		// 						)
+		// 							.then((res) => res.json())
+		// 							.then((data) => {
+		// 								// console.log(data.stats[0])
 
-										if (data.stats[0].splits[0]) {
-											currentStats.push(data.stats[0].splits[0].stat);
-										} else {
-											currentStats.push("No NHL Stats");
-										}
-									});
-							} else {
-								currentStats.push("No NHL Stats");
-							}
-						});
-					// })
+		// 								console.log(data.stats[0]);
 
-					// })
-				} else {
-					// currentStats.push('No NHL Stats')
-				}
-			})
-		).then(() => console.log(values.draftYear, currentStats));
-	}, [values.picks]);
+		// 								if (data.stats[0].splits[0]) {
+		// 									currentStats.push(data.stats[0].splits[0].stat);
+		// 								} else {
+		// 									currentStats.push("No NHL Stats");
+		// 								}
+		// 							});
+		// 					} else {
+		// 						currentStats.push("No NHL Stats");
+		// 					}
+		// 				});
+		// 			// })
 
-	const createData = (round, overAll, teamName, prospectName) => {
+		// 			// })
+		// 		} else {
+		// 			// currentStats.push('No NHL Stats')
+		// 		}
+		// 	})
+		// ).then(() => console.log(values.draftYear, currentStats));
+	}, [currentProspectId]);
+
+	const createData = (round, overAll, teamName, prospectName, prospectId) => {
 		return {
 			round,
 			overAll,
 			teamName,
-			prospectName
+			prospectName,
+			prospectId
 			// stats: {
 
 			// }
@@ -127,12 +157,16 @@ const NewTable = () => {
 
 		return (
 			<>
-				<TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
+				<TableRow
+					sx={{ "& > *": { borderBottom: "unset" } }}
+					onClick={() => {
+						console.log(row.prospectId);
+						currentProspectId.current = row.prospectId;
+						setOpen(!open);
+						// setters.setCurrentProspectId(row.prospectId);
+					}}>
 					<TableCell>
-						<IconButton
-							aria-label="expand row"
-							size="small"
-							onClick={() => setOpen(!open)}>
+						<IconButton aria-label="expand row" size="small">
 							{open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
 						</IconButton>
 					</TableCell>
@@ -165,18 +199,22 @@ const NewTable = () => {
 			overAll: PropTypes.number.isRequired,
 			teamName: PropTypes.string.isRequired,
 			prospectName: PropTypes.string.isRequired,
+			prospectId: PropTypes.number,
 			stats: PropTypes.object
 		})
 	};
 
-	const rows = values.picks.map((pick) => {
-		return createData(
-			pick.round,
-			pick.pickOverall,
-			pick.team.name,
-			pick.prospect.fullName
-		);
-	});
+	const rows = values.picks
+		? values.picks.map((pick) => {
+				return createData(
+					pick.round,
+					pick.pickOverall,
+					pick.team.name,
+					pick.prospect.fullName,
+					pick.prospect.id
+				);
+		  })
+		: null;
 
 	return (
 		<TableContainer sx={{ width: 2 / 3, margin: "auto" }} component={Paper}>
@@ -191,9 +229,11 @@ const NewTable = () => {
 					</StyledTableRow>
 				</TableHead>
 				<TableBody>
-					{rows.map((row) => (
-						<Row className="that" key={row.name} row={row} />
-					))}
+					{rows
+						? rows.map((row, index) => (
+								<Row className="that" key={index} row={row} />
+						  ))
+						: null}
 				</TableBody>
 			</Table>
 		</TableContainer>
