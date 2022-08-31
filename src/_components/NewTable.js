@@ -19,8 +19,8 @@ import { styled } from "@mui/material/styles";
 
 const NewTable = () => {
 	let { values, setters } = useContext(DraftContext);
-	// let currentStats = [];
-	let currentProspectId = useRef(0);
+	let [currentStats, setCurrentStats] = useState({});
+	let [expanded, setExpanded] = useState([]);
 	let [currentYearPicks, setCurrentYearPicks] = useState([]);
 	const StyledTableCell = styled(TableCell)(({ theme }) => ({
 		[`&.${tableCellClasses.head}`]: {
@@ -49,6 +49,8 @@ const NewTable = () => {
 			.then((data) => {
 				let drafted = data.drafts[0].rounds.map((round) => round.picks).flat(2);
 
+				setExpanded([...drafted.map(() => false)]);
+
 				setCurrentYearPicks(drafted.slice());
 
 				if (values.teamName) {
@@ -58,24 +60,6 @@ const NewTable = () => {
 				} else {
 					setters.setPicks(drafted);
 				}
-
-				// return !values.teamName
-				// 	? setters.setPicks(drafted)
-				// 	: setters.setPicks(
-				// 			drafted.filter((draft) => draft.team.name === values.teamName)
-				// 	  );
-				// data.drafts[0].rounds.forEach((draft) => {
-				// 	draft.picks.forEach((round) => {
-				// 		if (values.teamName !== "") {
-				// 			if (values.teamName === round.team.name) {
-				// 				currentPicks.push(round);
-				// 			}
-				// 		} else {
-				// 			currentPicks.push(round);
-				// 		}
-				// 	});
-				// });
-				// setters.setPicks(currentPicks);
 			});
 	}, [values.draftYear]);
 
@@ -89,85 +73,154 @@ const NewTable = () => {
 		}
 	}, [values.teamName]);
 
+	const handleStats = async (id) => {
+		if (id) {
+			const stats = await fetch(
+				`https://statsapi.web.nhl.com//api/v1/draft/prospects/${id}`
+			)
+				.then((res) => res.json())
+				.then((data) => data.prospects[0].nhlPlayerId)
+				.then((nhlId) => {
+					return fetch(
+						`https://statsapi.web.nhl.com//api/v1/people/${nhlId}/stats?stats=careerRegularSeason`
+					)
+						.then((res) => res.json())
+						.then((data) => {
+							return data.stats[0].splits.length > 0
+								? data.stats[0].splits[0].stat
+								: { value: "No NHL Data" };
+						});
+				});
+
+			return stats;
+		}
+	};
+
 	useEffect(() => {
-		// currentStats = [];
-		console.log(currentProspectId.current, "yuh");
-		// Promise.all(
-		// 	values.picks.map((pick) => {
-		// 		if (pick.prospect.id !== undefined) {
-		// 			return fetch(
-		// 				`https://statsapi.web.nhl.com//api/v1/draft/prospects/${pick.prospect.id}`
-		// 			)
-		// 				.then((res) => res.json())
-		// 				.then((data) => data.prospects[0].nhlPlayerId)
-		// 				.then((data) => {
-		// 					console.log(data);
+		let stats = handleStats(values.setCurrentProspectId);
+		console.log(stats);
+	}, [values.setCurrentProspectId]);
 
-		// 					console.log(data);
+	// useEffect(() => {
+	// 	if (values.currentProspectId) {
+	// 		fetch(
+	// 			`https://statsapi.web.nhl.com//api/v1/draft/prospects/${values.currentProspectId}`
+	// 		)
+	// 			.then((res) => res.json())
+	// 			.then((data) => data.prospects[0].nhlPlayerId)
+	// 			.then((nhlId) => {
+	// 				fetch(
+	// 					`https://statsapi.web.nhl.com//api/v1/people/${nhlId}/stats?stats=careerRegularSeason`
+	// 				)
+	// 					.then((res) => res.json())
+	// 					.then((data) => {
+	// 						data.stats[0].splits.length > 0
+	// 							? setCurrentStats(data.stats[0].splits[0].stat)
+	// 							: setCurrentStats({ value: "No NHL Data" });
+	// 					});
+	// 			});
+	// 	} else {
+	// 		setCurrentStats({ value: "No NHL Data" });
+	// 	}
+	// }, [values.currentProspectId]);
 
-		// 					// console.log(data);
+	// useEffect(() => {
+	// 	currentStats = [];
+	// 	console.log(currentProspectId.current, "yuh");
+	// 	Promise.all(
+	// 		values.picks.map((pick) => {
+	// 			if (pick.prospect.id !== undefined) {
+	// 				return fetch(
+	// 					`https://statsapi.web.nhl.com//api/v1/draft/prospects/${pick.prospect.id}`
+	// 				)
+	// 					.then((res) => res.json())
+	// 					.then((data) => data.prospects[0].nhlPlayerId)
+	// 					.then((data) => {
+	// 						console.log(data);
 
-		// 					let playerId = data;
-		// 					if (playerId !== undefined) {
-		// 						return fetch(
-		// 							`https://statsapi.web.nhl.com//api/v1/people/${playerId}/stats?stats=careerRegularSeason`
-		// 						)
-		// 							.then((res) => res.json())
-		// 							.then((data) => {
-		// 								// console.log(data.stats[0])
+	// 						console.log(data);
 
-		// 								console.log(data.stats[0]);
+	// 						// console.log(data);
 
-		// 								if (data.stats[0].splits[0]) {
-		// 									currentStats.push(data.stats[0].splits[0].stat);
-		// 								} else {
-		// 									currentStats.push("No NHL Stats");
-		// 								}
-		// 							});
-		// 					} else {
-		// 						currentStats.push("No NHL Stats");
-		// 					}
-		// 				});
-		// 			// })
+	// 						let playerId = data;
+	// 						if (playerId !== undefined) {
+	// 							return fetch(
+	// 								`https://statsapi.web.nhl.com//api/v1/people/${playerId}/stats?stats=careerRegularSeason`
+	// 							)
+	// 								.then((res) => res.json())
+	// 								.then((data) => {
+	// 									// console.log(data.stats[0])
 
-		// 			// })
-		// 		} else {
-		// 			// currentStats.push('No NHL Stats')
-		// 		}
-		// 	})
-		// ).then(() => console.log(values.draftYear, currentStats));
-	}, [currentProspectId]);
+	// 									console.log(data.stats[0]);
 
-	const createData = (round, overAll, teamName, prospectName, prospectId) => {
+	// 									if (data.stats[0].splits[0]) {
+	// 										currentStats.push(data.stats[0].splits[0].stat);
+	// 									} else {
+	// 										currentStats.push("No NHL Stats");
+	// 									}
+	// 								});
+	// 						} else {
+	// 							currentStats.push("No NHL Stats");
+	// 						}
+	// 					});
+	// 				// })
+
+	// 				// })
+	// 			} else {
+	// 				// currentStats.push('No NHL Stats')
+	// 			}
+	// 		})
+	// 	).then(() => console.log(values.draftYear, currentStats));
+	// }, [currentProspectId]);
+
+	const createData = (
+		round,
+		overAll,
+		teamName,
+		prospectName,
+		prospectId,
+		rowIndex
+		// stats
+	) => {
 		return {
 			round,
 			overAll,
 			teamName,
 			prospectName,
-			prospectId
-			// stats: {
-
-			// }
+			prospectId,
+			rowIndex
+			// stats: { stats }
 		};
+	};
+
+	const handleClick = (index) => {
+		let newArr = [...expanded];
+		newArr[index] = !newArr[index];
+		setExpanded(newArr);
 	};
 
 	const Row = (props) => {
 		const { row } = props;
-		const [open, setOpen] = React.useState(false);
-
 		return (
 			<>
 				<TableRow
 					sx={{ "& > *": { borderBottom: "unset" } }}
-					onClick={() => {
-						console.log(row.prospectId);
-						currentProspectId.current = row.prospectId;
-						setOpen(!open);
-						// setters.setCurrentProspectId(row.prospectId);
+					onClick={async () => {
+						handleClick(row.rowIndex);
+						if (!expanded[row.rowIndex]) {
+							setters.setCurrentProspectId(row.prospectId);
+							// let stats = await handleStats(row.prospectId);
+							// row.stats = stats;
+							// console.log(stats);
+						}
 					}}>
 					<TableCell>
 						<IconButton aria-label="expand row" size="small">
-							{open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+							{expanded[row.rowIndex] ? (
+								<KeyboardArrowUpIcon />
+							) : (
+								<KeyboardArrowDownIcon />
+							)}
 						</IconButton>
 					</TableCell>
 					<TableCell component="th" scope="row" align="right">
@@ -179,12 +232,12 @@ const NewTable = () => {
 				</TableRow>
 				<TableRow>
 					<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
-						<Collapse in={open} timeout="auto" unmountOnExit>
+						<Collapse in={expanded[row.rowIndex]} timeout="auto" unmountOnExit>
 							<Box sx={{ margin: 1 }}>
 								<Typography variant="h6" gutterBottom component="div">
 									{`${row.prospectName} Stats`}
 								</Typography>
-								{/* Add the player stats here */}
+								{/* {`Assists: ${row.stats.assists}`} */}
 							</Box>
 						</Collapse>
 					</TableCell>
@@ -200,18 +253,21 @@ const NewTable = () => {
 			teamName: PropTypes.string.isRequired,
 			prospectName: PropTypes.string.isRequired,
 			prospectId: PropTypes.number,
+			rowIndex: PropTypes.number.isRequired,
 			stats: PropTypes.object
 		})
 	};
 
 	const rows = values.picks
-		? values.picks.map((pick) => {
+		? values.picks.map((pick, index) => {
 				return createData(
 					pick.round,
 					pick.pickOverall,
 					pick.team.name,
 					pick.prospect.fullName,
-					pick.prospect.id
+					pick.prospect.id,
+					index
+					// currentStats
 				);
 		  })
 		: null;

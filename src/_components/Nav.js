@@ -168,12 +168,12 @@ const Nav = () => {
 		{ name: "Winnipeg Jets", team_id: 52 }
 	];
 
-	let teamOptions = teams.map((team) => ({
-		value: team.name,
-		label: team.name
-	}));
+	// let teamOptions = teams.map((team) => ({
+	// 	value: team.name,
+	// 	label: team.name
+	// }));
 
-	let options = yearArr.map((item) => ({ value: item, label: item }));
+	// let options = yearArr.map((item) => ({ value: item, label: item }));
 
 	const useStyles = createStyles((theme) => ({
 		root: {
